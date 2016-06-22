@@ -1,8 +1,8 @@
 import tensorflow as tf
-from tensorflow.models.rnn import rnn_cell
-from tensorflow.models.rnn import seq2seq
-
 import numpy as np
+rnn_cell = tf.nn.rnn_cell
+seq2seq = tf.nn.seq2seq
+
 
 class Model():
     def __init__(self, args, infer=False):
