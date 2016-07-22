@@ -1,4 +1,5 @@
 from __future__ import print_function
+import gensim
 import numpy as np
 import tensorflow as tf
 
@@ -45,6 +46,8 @@ def main():
                                                   Note: this file contains absolute paths, be careful when moving files around;
                             'model.ckpt-*'      : file(s) with model definition (created by tf)
                         """)
+    parser.add_argument('--word2vec_embedding', type=str, default=None,
+                        help="filename for the pre-train gensim word2vec model")
     args = parser.parse_args()
     train(args)
 
@@ -86,6 +89,9 @@ def train(args):
     best_model_saver.remove_and_initialise_best_dir()
     with tf.Session() as sess:
         tf.initialize_all_variables().run()
+        if args.word2vec_embedding:
+            word2vec = gensim.models.Word2Vec.load(args.word2vec_embedding)
+            sess.run(tf.assign(model.embedding, word2vec.syn0))
         saver = tf.train.Saver(tf.all_variables())
         # restore model
         if args.init_from is not None:
