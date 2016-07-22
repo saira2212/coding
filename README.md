@@ -1,9 +1,10 @@
 # char-rnn-tensorflow
 
+# New changes in this repo:
 
-# New changes to be added in this repo:
+- Save the best model (i.e. minimum training loss) so far in the 'best' subfolder
 
-- Save the best model (i.e. minimum training loss) so far to the subfolder
+# Changes to be added:
 
 - Options for using gensim word2vec embedding
 - Add a web server for sampling
