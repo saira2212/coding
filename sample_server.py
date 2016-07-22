@@ -43,7 +43,7 @@ class SampleServer(object):
         # else
         self.lock.acquire()
         if not tid in self.threaded_models:
-            self.threaded_models[tid] = Model(self.saved_args, True)
+            self.threaded_models[tid] = Model(self.saved_args, infer=True)
         self.lock.release()
         return self.threaded_models[tid]
 

@@ -6,7 +6,7 @@
 - Options for using gensim word2vec embedding
 - Add a web server for sampling
 - Temperature [Pull request #28](https://github.com/sherjilozair/char-rnn-tensorflow/pull/28)
-
+- Dropouts [Pull request #35](https://github.com/sherjilozair/char-rnn-tensorflow/pull/35)
 
 
 ## Requirements
@@ -27,12 +27,6 @@ python sample_server.py --save_dir <your_checkpointed_model_directory>
 ```
 
 When the server is running, visit http://127.0.0.1:8080?prime=The&n=200&sample_mode=2 in the browser.
-
-
-
-## Changes to be added:
-
-- Dropouts [Pull request #35](https://github.com/sherjilozair/char-rnn-tensorflow/pull/35)
  
 
 # Readme from the original/upstream repo:

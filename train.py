@@ -48,6 +48,8 @@ def main():
                         """)
     parser.add_argument('--word2vec_embedding', type=str, default=None,
                         help="filename for the pre-train gensim word2vec model")
+    parser.add_argument('--dropout_keep_prob', type=float, default=1.0,
+                        help='probability of keeping weights in the dropout layer')
     args = parser.parse_args()
     train(args)
 
