@@ -5,6 +5,8 @@
 - Save the best model (i.e. minimum training loss) so far in the 'best' subfolder
 - Options for using gensim word2vec embedding
 - Add a web server for sampling
+- Temperature [Pull request #28](https://github.com/sherjilozair/char-rnn-tensorflow/pull/28)
+
 
 
 ## Requirements
@@ -30,11 +32,10 @@ When the server is running, visit http://127.0.0.1:8080?prime=The&n=200&sample_m
 
 ## Changes to be added:
 
-- Temperature [Pull request #28](https://github.com/sherjilozair/char-rnn-tensorflow/pull/28)
 - Dropouts [Pull request #35](https://github.com/sherjilozair/char-rnn-tensorflow/pull/35)
  
 
-# Readme from the upstream repo:
+# Readme from the original/upstream repo:
 
 Multi-layer Recurrent Neural Networks (LSTM, RNN) for character-level language models in Python using Tensorflow.
 
