@@ -3,8 +3,9 @@
 
 # New changes to be added in this repo:
 
-- Options for using gensim word2vec embedding
 - Save the best model (i.e. minimum training loss) so far to the subfolder
+
+- Options for using gensim word2vec embedding
 - Add a web server for sampling
 - Temperature [Pull request #28](https://github.com/sherjilozair/char-rnn-tensorflow/pull/28)
 - Dropouts [Pull request #35](https://github.com/sherjilozair/char-rnn-tensorflow/pull/35)

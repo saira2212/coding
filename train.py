@@ -6,6 +6,7 @@ import argparse
 import time
 import os
 from six.moves import cPickle
+from train_utils import BestModelSaver
 
 from utils import TextLoader
 from model import Model
@@ -81,12 +82,15 @@ def train(args):
         
     model = Model(args)
 
+    best_model_saver = BestModelSaver(args.save_dir)
+    best_model_saver.remove_and_initialise_best_dir()
     with tf.Session() as sess:
         tf.initialize_all_variables().run()
         saver = tf.train.Saver(tf.all_variables())
         # restore model
         if args.init_from is not None:
             saver.restore(sess, ckpt.model_checkpoint_path)
+        total_steps = args.num_epochs * data_loader.num_batches
         for e in range(args.num_epochs):
             sess.run(tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e)))
             data_loader.reset_batch_pointer()
@@ -97,15 +101,16 @@ def train(args):
                 feed = {model.input_data: x, model.targets: y, model.initial_state: state}
                 train_loss, state, _ = sess.run([model.cost, model.final_state, model.train_op], feed)
                 end = time.time()
+                steps_so_far = e * data_loader.num_batches + b
                 print("{}/{} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}" \
-                    .format(e * data_loader.num_batches + b,
-                            args.num_epochs * data_loader.num_batches,
+                    .format(data_loader.num_batches + b, total_steps,
                             e, train_loss, end - start))
-                if (e * data_loader.num_batches + b) % args.save_every == 0\
+                if steps_so_far % args.save_every == 0\
                     or (e==args.num_epochs-1 and b == data_loader.num_batches-1): # save for the last result
                     checkpoint_path = os.path.join(args.save_dir, 'model.ckpt')
-                    saver.save(sess, checkpoint_path, global_step = e * data_loader.num_batches + b)
-                    print("model saved to {}".format(checkpoint_path))
+                    path = saver.save(sess, checkpoint_path, global_step = e * data_loader.num_batches + b)
+                    print("model saved to {}".format(path))
+                    best_model_saver.keep_best(path, train_loss, steps_so_far, total_steps)
 
 if __name__ == '__main__':
     main()
