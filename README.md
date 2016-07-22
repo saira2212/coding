@@ -1,4 +1,16 @@
 # char-rnn-tensorflow
+
+
+# New changes to be added in this repo:
+
+- Options for using gensim word2vec embedding
+- Save the best model (i.e. minimum training loss) so far to the subfolder
+- Add a web server for sampling
+- Temperature [Pull request #28](https://github.com/sherjilozair/char-rnn-tensorflow/pull/28)
+- Dropouts [Pull request #35](https://github.com/sherjilozair/char-rnn-tensorflow/pull/35)
+
+# Readme from the upstream repo:
+
 Multi-layer Recurrent Neural Networks (LSTM, RNN) for character-level language models in Python using Tensorflow.
 
 Inspired from Andrej Karpathy's [char-rnn](https://github.com/karpathy/char-rnn).
