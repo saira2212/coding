@@ -36,8 +36,8 @@ class Model():
                 softmax_b = tf.get_variable("softmax_b", [args.vocab_size])
                 with tf.device("/cpu:0"):
                     embedding = tf.get_variable("embedding", [args.vocab_size, args.rnn_size])
-                    inputs = tf.split(1, args.seq_length, tf.nn.embedding_lookup(embedding, self.input_data))
-                    inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
+                    input_embeddings = tf.nn.embedding_lookup(embedding, self.input_data)
+                    inputs = tf.unpack(input_embeddings, axis=1)
             def loop(prev, _):
                 prev = tf.matmul(prev, softmax_w) + softmax_b
                 prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
@@ -81,17 +81,41 @@ class Model():
             build_birnn(args)
 
         self.probs = tf.nn.softmax(self.logits)
-        loss = seq2seq.sequence_loss_by_example([self.logits],
+        self.loss = seq2seq.sequence_loss_by_example([self.logits],
                 [tf.reshape(self.targets, [-1])],
                 [tf.ones([args.batch_size * args.seq_length])],
                 args.vocab_size)
-        self.cost = tf.reduce_sum(loss) / args.batch_size / args.seq_length
+        self.cost = tf.reduce_sum(self.loss) / args.batch_size / args.seq_length
         self.lr = tf.Variable(0.0, trainable=False)
         tvars = tf.trainable_variables()
         grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
                 args.grad_clip)
         optimizer = tf.train.AdamOptimizer(self.lr)
         self.train_op = optimizer.apply_gradients(zip(grads, tvars))
+
+    def eval(self, sess, chars, vocab, text):
+        batch_size = 200
+        state = sess.run(self.cell.zero_state(1, tf.float32))
+        state2 = sess.run(self.cell2.zero_state(1, tf.float32))
+        x = [vocab[c] if c in vocab else vocab['UNK'] for c in text]
+        x = [vocab['<S>']] + x + [vocab['</S>']]
+        total_len = len(x) - 1
+        # pad x so the batch_size divides it
+        while len(x) % 200 != 1:
+            x.append(vocab[' '])
+        y = np.array(x[1:]).reshape((-1, batch_size))
+        x = np.array(x[:-1]).reshape((-1, batch_size))
+
+        total_loss = 0.0
+        for i in range(x.shape[0]):
+            feed = {self.input_data: x[i:i+1, :], self.targets: y[i:i+1, :],
+                    self.initial_state: state, self.initial_state2: state2}
+            [state, state2, loss] = sess.run([self.last_state, self.last_state2, self.loss], feed)
+            total_loss += loss.sum()
+        # need to subtract off loss from padding tokens
+        total_loss -= loss[total_len % batch_size - batch_size:].sum()
+        avg_entropy = total_loss / len(text)
+        return np.exp(avg_entropy)  # this is the perplexity
 
     def sample(self, sess, chars, vocab, num=200, prime='The ', sampling_type=1):
         state = sess.run(self.cell.zero_state(1, tf.float32))
