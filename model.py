@@ -20,9 +20,12 @@ class Model():
         else:
             raise Exception("model type not supported: {}".format(args.model))
 
-        cell = cell_fn(args.rnn_size, state_is_tuple=True)
-
-        self.cell = cell = rnn_cell.MultiRNNCell([cell] * args.num_layers, state_is_tuple=True)
+        if args.model == 'lstm':
+            cell = cell_fn(args.rnn_size, state_is_tuple=True)
+            self.cell = cell = rnn_cell.MultiRNNCell([cell] * args.num_layers, state_is_tuple=True)
+        else:
+            cell = cell_fn(args.rnn_size)
+            self.cell = cell = rnn_cell.MultiRNNCell([cell] * args.num_layers)
 
         self.input_data = tf.placeholder(tf.int32, [args.batch_size, args.seq_length])
         self.targets = tf.placeholder(tf.int32, [args.batch_size, args.seq_length])
