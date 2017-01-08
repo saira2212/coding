@@ -20,8 +20,10 @@ def main():
                        help='size of RNN hidden state')
     parser.add_argument('--num_layers', type=int, default=2,
                        help='number of layers in the RNN')
-    parser.add_argument('--model', type=str, default='lstm',
+    parser.add_argument('--cell', type=str, default='lstm',
                        help='rnn, gru, or lstm')
+    parser.add_argument('--model', type=str, default='uni',
+                       help='uni, or bi')
     parser.add_argument('--batch_size', type=int, default=50,
                        help='minibatch size')
     parser.add_argument('--seq_length', type=int, default=50,
@@ -91,14 +93,15 @@ def train(args):
             sess.run(tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e)))
             data_loader.reset_batch_pointer()
             state = sess.run(model.initial_state)
+            state2 = sess.run(model.initial_state2)
             for b in range(data_loader.num_batches):
                 start = time.time()
                 x, y = data_loader.next_batch()
-                feed = {model.input_data: x, model.targets: y}
-                for i, (c, h) in enumerate(model.initial_state):
-                    feed[c] = state[i].c
-                    feed[h] = state[i].h
-                train_loss, state, _ = sess.run([model.cost, model.final_state, model.train_op], feed)
+                if b == 0 and e == 0:
+                    feed = {model.input_data: x, model.targets: y}
+                else:
+                    feed = {model.input_data: x, model.targets: y, model.initial_state: state, model.initial_state2: state2}
+                train_loss, state, state2, _ = sess.run([model.cost, model.last_state, model.last_state2, model.train_op], feed)
                 end = time.time()
                 print("{}/{} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}" \
                     .format(e * data_loader.num_batches + b,
