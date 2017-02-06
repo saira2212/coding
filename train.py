@@ -84,6 +84,7 @@ def train(args):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver(tf.global_variables())
+        writer = tf.summary.FileWriter(args.save_dir, graph=tf.get_default_graph())
         # restore model
         if args.init_from is not None:
             saver.restore(sess, ckpt.model_checkpoint_path)
@@ -98,12 +99,13 @@ def train(args):
                 for i, (c, h) in enumerate(model.initial_state):
                     feed[c] = state[i].c
                     feed[h] = state[i].h
-                train_loss, state, _ = sess.run([model.cost, model.final_state, model.train_op], feed)
+                train_loss, state, _, summary = sess.run([model.cost, model.final_state, model.train_op, model.summary_op], feed)
                 end = time.time()
                 print("{}/{} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}" \
                     .format(e * data_loader.num_batches + b,
                             args.num_epochs * data_loader.num_batches,
                             e, train_loss, end - start))
+                writer.add_summary(summary, e)
                 if (e * data_loader.num_batches + b) % args.save_every == 0\
                     or (e==args.num_epochs-1 and b == data_loader.num_batches-1): # save for the last result
                     checkpoint_path = os.path.join(args.save_dir, 'model.ckpt')
