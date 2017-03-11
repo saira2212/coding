@@ -50,7 +50,8 @@ def main():
 def train(args):
     data_loader = TextLoader(args.data_dir, args.batch_size, args.seq_length)
     args.vocab_size = data_loader.vocab_size
-    
+    args.decay_step = data_loader.num_batches
+
     # check compatibility if training is continued from previously saved model
     if args.init_from is not None:
         # check if all necessary files exist 
@@ -88,7 +89,6 @@ def train(args):
         if args.init_from is not None:
             saver.restore(sess, ckpt.model_checkpoint_path)
         for e in range(args.num_epochs):
-            sess.run(tf.assign(model.lr, args.learning_rate * (args.decay_rate ** e)))
             data_loader.reset_batch_pointer()
             state = sess.run(model.initial_state)
             for b in range(data_loader.num_batches):
@@ -98,12 +98,12 @@ def train(args):
                 for i, (c, h) in enumerate(model.initial_state):
                     feed[c] = state[i].c
                     feed[h] = state[i].h
-                train_loss, state, _ = sess.run([model.cost, model.final_state, model.train_op], feed)
+                lr, train_loss, state, _ = sess.run([model.lr, model.cost, model.final_state, model.train_op], feed)
                 end = time.time()
-                print("{}/{} (epoch {}), train_loss = {:.3f}, time/batch = {:.3f}" \
+                print("{}/{} (epoch {}), lr = {:.6f}, train_loss = {:.3f}, time/batch = {:.3f}" \
                     .format(e * data_loader.num_batches + b,
                             args.num_epochs * data_loader.num_batches,
-                            e, train_loss, end - start))
+                            e, lr, train_loss, end - start))
                 if (e * data_loader.num_batches + b) % args.save_every == 0\
                     or (e==args.num_epochs-1 and b == data_loader.num_batches-1): # save for the last result
                     checkpoint_path = os.path.join(args.save_dir, 'model.ckpt')
