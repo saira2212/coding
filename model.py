@@ -50,12 +50,13 @@ class Model():
                 [tf.ones([args.batch_size * args.seq_length])])
         self.cost = tf.reduce_sum(loss) / args.batch_size / args.seq_length
         self.final_state = last_state
-        self.lr = tf.Variable(0.0, trainable=False)
-        tvars = tf.trainable_variables()
-        grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
-                args.grad_clip)
-        optimizer = tf.train.AdamOptimizer(self.lr)
-        self.train_op = optimizer.apply_gradients(zip(grads, tvars))
+        if not infer:
+            self.lr = tf.Variable(0.0, trainable=False)
+            tvars = tf.trainable_variables()
+            grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
+                    args.grad_clip)
+            optimizer = tf.train.AdamOptimizer(self.lr)
+            self.train_op = optimizer.apply_gradients(zip(grads, tvars))
 
     def sample(self, sess, chars, vocab, num=200, prime='The ', sampling_type=1):
         state = sess.run(self.cell.zero_state(1, tf.float32))
