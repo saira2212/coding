@@ -7,8 +7,6 @@ from six.moves import cPickle
 
 from model import Model
 
-from six import text_type
-
 
 def main():
     parser = argparse.ArgumentParser(
