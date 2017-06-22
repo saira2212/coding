@@ -15,7 +15,7 @@ def main():
                         help='model directory to store checkpointed models')
     parser.add_argument('-n', type=int, default=500,
                         help='number of characters to sample')
-    parser.add_argument('--prime', type=lambda s: unicode(s, 'utf8'), default=u' ',
+    parser.add_argument('--prime', type=lambda s: unicode(s, 'utf8'), default=' ',
                         help='prime text')
     parser.add_argument('--sample', type=int, default=1,
                         help='0 to use max at each timestep, 1 to sample at '
