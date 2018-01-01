@@ -16,47 +16,47 @@ class Model():
             self.build_network()
 
     def build_network(self):
-        if args.model == 'rnn':
+        if self.args.model == 'rnn':
             cell_fn = rnn.BasicRNNCell
-        elif args.model == 'gru':
+        elif self.args.model == 'gru':
             cell_fn = rnn.GRUCell
-        elif args.model == 'lstm':
+        elif self.args.model == 'lstm':
             cell_fn = rnn.BasicLSTMCell
-        elif args.model == 'nas':
+        elif self.args.model == 'nas':
             cell_fn = rnn.NASCell
         else:
-            raise Exception("model type not supported: {}".format(args.model))
+            raise Exception("model type not supported: {}".format(self.args.model))
 
         cells = []
-        for _ in range(args.num_layers):
-            cell = cell_fn(args.rnn_size)
-            if training and (args.output_keep_prob < 1.0 or args.input_keep_prob < 1.0):
+        for _ in range(self.args.num_layers):
+            cell = cell_fn(self.args.rnn_size)
+            if training and (self.args.output_keep_prob < 1.0 or self.args.input_keep_prob < 1.0):
                 cell = rnn.DropoutWrapper(cell,
-                                          input_keep_prob=args.input_keep_prob,
-                                          output_keep_prob=args.output_keep_prob)
+                                          input_keep_prob=self.args.input_keep_prob,
+                                          output_keep_prob=self.args.output_keep_prob)
             cells.append(cell)
 
         self.cell = cell = rnn.MultiRNNCell(cells, state_is_tuple=True)
 
         self.input_data = tf.placeholder(
-            tf.int32, [args.batch_size, args.seq_length])
+            tf.int32, [self.args.batch_size, self.args.seq_length])
         self.targets = tf.placeholder(
-            tf.int32, [args.batch_size, args.seq_length])
-        self.initial_state = cell.zero_state(args.batch_size, tf.float32)
+            tf.int32, [self.args.batch_size, self.args.seq_length])
+        self.initial_state = cell.zero_state(self.args.batch_size, tf.float32)
 
         with tf.variable_scope('rnnlm'):
             softmax_w = tf.get_variable("softmax_w",
-                                        [args.rnn_size, args.vocab_size])
-            softmax_b = tf.get_variable("softmax_b", [args.vocab_size])
+                                        [self.args.rnn_size, self.args.vocab_size])
+            softmax_b = tf.get_variable("softmax_b", [self.args.vocab_size])
 
-        embedding = tf.get_variable("embedding", [args.vocab_size, args.rnn_size])
+        embedding = tf.get_variable("embedding", [self.args.vocab_size, self.args.rnn_size])
         inputs = tf.nn.embedding_lookup(embedding, self.input_data)
 
         # dropout beta testing: double check which one should affect next line
-        if training and args.output_keep_prob:
-            inputs = tf.nn.dropout(inputs, args.output_keep_prob)
+        if training and self.args.output_keep_prob:
+            inputs = tf.nn.dropout(inputs, self.args.output_keep_prob)
 
-        inputs = tf.split(inputs, args.seq_length, 1)
+        inputs = tf.split(inputs, self.args.seq_length, 1)
         inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
         def loop(prev, _):
@@ -65,7 +65,7 @@ class Model():
             return tf.nn.embedding_lookup(embedding, prev_symbol)
 
         outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell, loop_function=loop if not training else None, scope='rnnlm')
-        output = tf.reshape(tf.concat(outputs, 1), [-1, args.rnn_size])
+        output = tf.reshape(tf.concat(outputs, 1), [-1, self.args.rnn_size])
 
 
         self.logits = tf.matmul(output, softmax_w) + softmax_b
@@ -73,14 +73,14 @@ class Model():
         loss = legacy_seq2seq.sequence_loss_by_example(
                 [self.logits],
                 [tf.reshape(self.targets, [-1])],
-                [tf.ones([args.batch_size * args.seq_length])])
+                [tf.ones([self.args.batch_size * self.args.seq_length])])
         with tf.name_scope('cost'):
-            self.cost = tf.reduce_sum(loss) / args.batch_size / args.seq_length
+            self.cost = tf.reduce_sum(loss) / self.args.batch_size / self.args.seq_length
         self.final_state = last_state
         self.lr = tf.Variable(0.0, trainable=False)
         tvars = tf.trainable_variables()
         grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
-                args.grad_clip)
+                self.args.grad_clip)
         with tf.name_scope('optimizer'):
             optimizer = tf.train.AdamOptimizer(self.lr)
         self.train_op = optimizer.apply_gradients(zip(grads, tvars))
