@@ -12,7 +12,7 @@ class Model():
             args.batch_size = 1
             args.seq_length = 1
 
-        with tf.device(self._device):
+        with tf.device(self._device()):
             self.build_network(training)
 
     def build_network(self, training):
