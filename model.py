@@ -38,26 +38,27 @@ class Model():
 
             self.cell = cell = rnn.MultiRNNCell(cells, state_is_tuple=True)
 
-        self.input_data = tf.placeholder(
-            tf.int32, [self.args.batch_size, self.args.seq_length])
-        self.targets = tf.placeholder(
-            tf.int32, [self.args.batch_size, self.args.seq_length])
-        self.initial_state = cell.zero_state(self.args.batch_size, tf.float32)
+        with tf.device(self._device()):
+            self.input_data = tf.placeholder(
+                tf.int32, [self.args.batch_size, self.args.seq_length])
+            self.targets = tf.placeholder(
+                tf.int32, [self.args.batch_size, self.args.seq_length])
+            self.initial_state = cell.zero_state(self.args.batch_size, tf.float32)
 
-        with tf.variable_scope('rnnlm'):
-            softmax_w = tf.get_variable("softmax_w",
-                                        [self.args.rnn_size, self.args.vocab_size])
-            softmax_b = tf.get_variable("softmax_b", [self.args.vocab_size])
+            with tf.variable_scope('rnnlm'):
+                softmax_w = tf.get_variable("softmax_w",
+                                            [self.args.rnn_size, self.args.vocab_size])
+                softmax_b = tf.get_variable("softmax_b", [self.args.vocab_size])
 
-        embedding = tf.get_variable("embedding", [self.args.vocab_size, self.args.rnn_size])
-        inputs = tf.nn.embedding_lookup(embedding, self.input_data)
+            embedding = tf.get_variable("embedding", [self.args.vocab_size, self.args.rnn_size])
+            inputs = tf.nn.embedding_lookup(embedding, self.input_data)
 
-        # dropout beta testing: double check which one should affect next line
-        if training and self.args.output_keep_prob:
-            inputs = tf.nn.dropout(inputs, self.args.output_keep_prob)
+            # dropout beta testing: double check which one should affect next line
+            if training and self.args.output_keep_prob:
+                inputs = tf.nn.dropout(inputs, self.args.output_keep_prob)
 
-        inputs = tf.split(inputs, self.args.seq_length, 1)
-        inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
+            inputs = tf.split(inputs, self.args.seq_length, 1)
+            inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
         def loop(prev, _):
             prev = tf.matmul(prev, softmax_w) + softmax_b
