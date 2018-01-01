@@ -12,6 +12,10 @@ class Model():
             args.batch_size = 1
             args.seq_length = 1
 
+        with tf.device(self._device):
+            self.build_network()
+
+    def build_network(self):
         if args.model == 'rnn':
             cell_fn = rnn.BasicRNNCell
         elif args.model == 'gru':
@@ -122,3 +126,6 @@ class Model():
             ret += pred
             char = pred
         return ret
+
+    def _device(self):
+        return args.device

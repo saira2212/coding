@@ -22,6 +22,8 @@ def main():
     parser.add_argument('--sample', type=int, default=1,
                         help='0 to use max at each timestep, 1 to sample at '
                              'each timestep, 2 to sample on spaces')
+    parser.add_argument('--device', type=str, default='GPU:0',
+                        help='Which device (GPU or CPU) to use')
 
     args = parser.parse_args()
     sample(args)
