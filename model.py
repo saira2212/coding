@@ -12,8 +12,7 @@ class Model():
             args.batch_size = 1
             args.seq_length = 1
 
-        with tf.device(self._device()):
-            self.build_network(training)
+        self.build_network(training)
 
     def build_network(self, training):
         if self.args.model == 'rnn':
@@ -28,15 +27,16 @@ class Model():
             raise Exception("model type not supported: {}".format(self.args.model))
 
         cells = []
-        for _ in range(self.args.num_layers):
-            cell = cell_fn(self.args.rnn_size)
-            if training and (self.args.output_keep_prob < 1.0 or self.args.input_keep_prob < 1.0):
-                cell = rnn.DropoutWrapper(cell,
-                                          input_keep_prob=self.args.input_keep_prob,
-                                          output_keep_prob=self.args.output_keep_prob)
-            cells.append(cell)
+        with tf.device(self._device()):
+            for _ in range(self.args.num_layers):
+                cell = cell_fn(self.args.rnn_size)
+                if training and (self.args.output_keep_prob < 1.0 or self.args.input_keep_prob < 1.0):
+                    cell = rnn.DropoutWrapper(cell,
+                                              input_keep_prob=self.args.input_keep_prob,
+                                              output_keep_prob=self.args.output_keep_prob)
+                cells.append(cell)
 
-        self.cell = cell = rnn.MultiRNNCell(cells, state_is_tuple=True)
+            self.cell = cell = rnn.MultiRNNCell(cells, state_is_tuple=True)
 
         self.input_data = tf.placeholder(
             tf.int32, [self.args.batch_size, self.args.seq_length])
@@ -64,12 +64,12 @@ class Model():
             prev_symbol = tf.stop_gradient(tf.argmax(prev, 1))
             return tf.nn.embedding_lookup(embedding, prev_symbol)
 
-        outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell, loop_function=loop if not training else None, scope='rnnlm')
+        with tf.device(self._device()):
+            outputs, last_state = legacy_seq2seq.rnn_decoder(inputs, self.initial_state, cell, loop_function=loop if not training else None, scope='rnnlm')
         output = tf.reshape(tf.concat(outputs, 1), [-1, self.args.rnn_size])
 
 
-        with tf.device('cpu:0'):
-            self.logits = tf.matmul(output, softmax_w) + softmax_b
+        self.logits = tf.matmul(output, softmax_w) + softmax_b
         self.probs = tf.nn.softmax(self.logits)
         loss = legacy_seq2seq.sequence_loss_by_example(
                 [self.logits],
