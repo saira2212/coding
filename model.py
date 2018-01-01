@@ -68,7 +68,8 @@ class Model():
         output = tf.reshape(tf.concat(outputs, 1), [-1, self.args.rnn_size])
 
 
-        self.logits = tf.matmul(output, softmax_w) + softmax_b
+        with tf.device('cpu:0'):
+            self.logits = tf.matmul(output, softmax_w) + softmax_b
         self.probs = tf.nn.softmax(self.logits)
         loss = legacy_seq2seq.sequence_loss_by_example(
                 [self.logits],
