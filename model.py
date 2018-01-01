@@ -72,20 +72,21 @@ class Model():
 
         self.logits = tf.matmul(output, softmax_w) + softmax_b
         self.probs = tf.nn.softmax(self.logits)
-        loss = legacy_seq2seq.sequence_loss_by_example(
-                [self.logits],
-                [tf.reshape(self.targets, [-1])],
-                [tf.ones([self.args.batch_size * self.args.seq_length])])
-        with tf.name_scope('cost'):
-            self.cost = tf.reduce_sum(loss) / self.args.batch_size / self.args.seq_length
-        self.final_state = last_state
-        self.lr = tf.Variable(0.0, trainable=False)
-        tvars = tf.trainable_variables()
-        grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
-                self.args.grad_clip)
-        with tf.name_scope('optimizer'):
-            optimizer = tf.train.AdamOptimizer(self.lr)
-        self.train_op = optimizer.apply_gradients(zip(grads, tvars))
+        with tf.device(self._device()):
+            loss = legacy_seq2seq.sequence_loss_by_example(
+                    [self.logits],
+                    [tf.reshape(self.targets, [-1])],
+                    [tf.ones([self.args.batch_size * self.args.seq_length])])
+            with tf.name_scope('cost'):
+                self.cost = tf.reduce_sum(loss) / self.args.batch_size / self.args.seq_length
+            self.final_state = last_state
+            self.lr = tf.Variable(0.0, trainable=False)
+            tvars = tf.trainable_variables()
+            grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars),
+                    self.args.grad_clip)
+            with tf.name_scope('optimizer'):
+                optimizer = tf.train.AdamOptimizer(self.lr)
+            self.train_op = optimizer.apply_gradients(zip(grads, tvars))
 
         # instrument tensorboard
         tf.summary.histogram('logits', self.logits)
