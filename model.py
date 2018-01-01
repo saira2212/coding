@@ -128,4 +128,4 @@ class Model():
         return ret
 
     def _device(self):
-        return args.device
+        return self.args.device
