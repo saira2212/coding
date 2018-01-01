@@ -13,9 +13,9 @@ class Model():
             args.seq_length = 1
 
         with tf.device(self._device):
-            self.build_network()
+            self.build_network(training)
 
-    def build_network(self):
+    def build_network(self, training):
         if self.args.model == 'rnn':
             cell_fn = rnn.BasicRNNCell
         elif self.args.model == 'gru':
