@@ -48,6 +48,7 @@ class TextLoader():
                                                    self.seq_length))
 
     def create_batches(self):
+        print("Max batch_size: {}".format(self.tensor.size / self.seq_length))
         self.num_batches = int(self.tensor.size / (self.batch_size *
                                                    self.seq_length))
 

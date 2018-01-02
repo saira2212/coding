@@ -39,6 +39,8 @@ def main():
                         help='learning rate')
     parser.add_argument('--decay_rate', type=float, default=0.97,
                         help='decay rate for rmsprop')
+    parser.add_argument('--device', type=str, default='GPU:0',
+                        help='Which device (GPU or CPU) to use')
     parser.add_argument('--output_keep_prob', type=float, default=1.0,
                         help='probability of keeping weights in the hidden layer')
     parser.add_argument('--input_keep_prob', type=float, default=1.0,
@@ -112,9 +114,14 @@ def train(args):
                 start = time.time()
                 x, y = data_loader.next_batch()
                 feed = {model.input_data: x, model.targets: y}
-                for i, (c, h) in enumerate(model.initial_state):
-                    feed[c] = state[i].c
-                    feed[h] = state[i].h
+
+                if model.args == 'lstm':
+                    for i, (c, h) in enumerate(model.initial_state):
+                        feed[c] = state[i].c
+                        feed[h] = state[i].h
+                else:
+                    for i, t in enumerate(model.initial_state):
+                        feed[t] = state[i]
 
                 # instrument for tensorboard
                 summ, train_loss, state, _ = sess.run([summaries, model.cost, model.final_state, model.train_op], feed)
