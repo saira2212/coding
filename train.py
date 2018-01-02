@@ -114,9 +114,14 @@ def train(args):
                 start = time.time()
                 x, y = data_loader.next_batch()
                 feed = {model.input_data: x, model.targets: y}
-                for i, (c, h) in enumerate(model.initial_state):
-                    feed[c] = state[i].c
-                    feed[h] = state[i].h
+
+                if model.args == 'lstm':
+                    for i, (c, h) in enumerate(model.initial_state):
+                        feed[c] = state[i].c
+                        feed[h] = state[i].h
+                else:
+                    for i, t in enumerate(model.initial_state):
+                        feed[t] = state[i]
 
                 # instrument for tensorboard
                 summ, train_loss, state, _ = sess.run([summaries, model.cost, model.final_state, model.train_op], feed)
