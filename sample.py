@@ -21,6 +21,8 @@ parser.add_argument('--prime', type=text_type, default=u'',
 parser.add_argument('--sample', type=int, default=1,
                     help='0 to use max at each timestep, 1 to sample at '
                          'each timestep, 2 to sample on spaces')
+parser.add_argument('--temperature', type=float, default=1.,
+                    help='temperature for sampling, within the range of (0,1]')
 
 args = parser.parse_args()
 
@@ -43,7 +45,7 @@ def sample(args):
         if ckpt and ckpt.model_checkpoint_path:
             saver.restore(sess, ckpt.model_checkpoint_path)
             print(model.sample(sess, chars, vocab, args.n, args.prime,
-                               args.sample).encode('utf-8'))
+                               args.sample, args.temperature).encode('utf-8'))
 
 if __name__ == '__main__':
     sample(args)

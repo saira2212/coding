@@ -72,7 +72,7 @@ class Model():
 
         # output layer
         self.logits = tf.matmul(output, softmax_w) + softmax_b
-        self.probs = tf.nn.softmax(self.logits)
+        self.probs = None # need to wait until temperature is specified before computing this
 
         # loss is calculate by the log loss and taking the average.
         loss = legacy_seq2seq.sequence_loss_by_example(
@@ -99,7 +99,9 @@ class Model():
         tf.summary.histogram('loss', loss)
         tf.summary.scalar('train_loss', self.cost)
 
-    def sample(self, sess, chars, vocab, num=200, prime='The ', sampling_type=1):
+    def sample(self, sess, chars, vocab, num=200, prime='The ', sampling_type=1, temperature=1.):
+        self.probs = tf.nn.softmax(tf.div(self.logits, temperature))
+
         state = sess.run(self.cell.zero_state(1, tf.float32))
         for char in prime[:-1]:
             x = np.zeros((1, 1))
