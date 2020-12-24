@@ -49,7 +49,7 @@ class TextLoader():
         self.tensor = np.load(tensor_file)
         self.num_batches = int(self.tensor.size / (self.batch_size *
                                                    self.seq_length))
-    # seperate the whole data into different batches.
+    # separate the whole data into different batches.
     def create_batches(self):
         self.num_batches = int(self.tensor.size / (self.batch_size *
                                                    self.seq_length))
